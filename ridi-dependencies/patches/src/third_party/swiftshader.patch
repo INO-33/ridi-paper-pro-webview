@@ -1,0 +1,7 @@
+diff --git a/third_party/pnacl-subzero b/third_party/pnacl-subzero
+index 47b6ba6db7c8b8dd36ac54dbd19ae7b4a5b77424..c48bb8b02c98ae49438e43aa1143a958784822a5 160000
+--- a/third_party/pnacl-subzero
++++ b/third_party/pnacl-subzero
+@@ -1 +1 @@
+-Subproject commit 47b6ba6db7c8b8dd36ac54dbd19ae7b4a5b77424
++Subproject commit c48bb8b02c98ae49438e43aa1143a958784822a5

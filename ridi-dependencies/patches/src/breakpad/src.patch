@@ -1,0 +1,122 @@
+diff --git a/client/linux/handler/exception_handler.cc b/client/linux/handler/exception_handler.cc
+index d372a10ca1c48e6483517ea9844dc3e02631359e..dd515ac7c2605b84b6042d929a313c761e774dcf 100644
+--- a/client/linux/handler/exception_handler.cc
++++ b/client/linux/handler/exception_handler.cc
+@@ -218,8 +218,81 @@ pthread_mutex_t g_handler_stack_mutex_ = PTHREAD_MUTEX_INITIALIZER;
+ // time can use |g_crash_context_|.
+ ExceptionHandler::CrashContext g_crash_context_;
+ 
++volatile sig_atomic_t g_eink_primary_signal_logging_enabled = 0;
++
++#if defined(__ANDROID__)
++char* AppendEinkSignalText(char* out, char* end, const char* text) {
++  while (out < end && *text)
++    *out++ = *text++;
++  return out;
++}
++
++char* AppendEinkSignalUnsigned(char* out, char* end, unsigned long value) {
++  char digits[20];
++  int count = 0;
++  do {
++    digits[count++] = static_cast<char>('0' + value % 10);
++    value /= 10;
++  } while (value && count < static_cast<int>(sizeof(digits)));
++  while (count && out < end)
++    *out++ = digits[--count];
++  return out;
++}
++
++char* AppendEinkSignalHex(char* out, char* end, uintptr_t value) {
++  static const char kHex[] = "0123456789abcdef";
++  out = AppendEinkSignalText(out, end, "0x");
++  const int digits = sizeof(uintptr_t) * 2;
++  for (int shift = (digits - 1) * 4; shift >= 0 && out < end; shift -= 4)
++    *out++ = kHex[(value >> shift) & 0xf];
++  return out;
++}
++
++void LogEinkPrimarySignal(int sig, siginfo_t* info, void* uc, pid_t tid) {
++  struct ucontext* context = reinterpret_cast<struct ucontext*>(uc);
++  uintptr_t pc = 0;
++  uintptr_t sp = 0;
++#if defined(__i386__)
++  pc = static_cast<uintptr_t>(context->uc_mcontext.gregs[REG_EIP]);
++  sp = static_cast<uintptr_t>(context->uc_mcontext.gregs[REG_ESP]);
++#elif defined(__x86_64__)
++  pc = static_cast<uintptr_t>(context->uc_mcontext.gregs[REG_RIP]);
++  sp = static_cast<uintptr_t>(context->uc_mcontext.gregs[REG_RSP]);
++#elif defined(__arm__)
++  pc = static_cast<uintptr_t>(context->uc_mcontext.arm_pc);
++  sp = static_cast<uintptr_t>(context->uc_mcontext.arm_sp);
++#elif defined(__aarch64__)
++  pc = static_cast<uintptr_t>(context->uc_mcontext.pc);
++  sp = static_cast<uintptr_t>(context->uc_mcontext.sp);
++#endif
++
++  char line[256];
++  char* out = line;
++  char* const end = line + sizeof(line) - 1;
++  out = AppendEinkSignalText(out, end, "EINK_T1_PRIMARY signo=");
++  out = AppendEinkSignalUnsigned(out, end, sig);
++  out = AppendEinkSignalText(out, end, " code=");
++  out = AppendEinkSignalUnsigned(out, end, info->si_code);
++  out = AppendEinkSignalText(out, end, " addr=");
++  out = AppendEinkSignalHex(out, end,
++                            reinterpret_cast<uintptr_t>(info->si_addr));
++  out = AppendEinkSignalText(out, end, " tid=");
++  out = AppendEinkSignalUnsigned(out, end, tid);
++  out = AppendEinkSignalText(out, end, " pc=");
++  out = AppendEinkSignalHex(out, end, pc);
++  out = AppendEinkSignalText(out, end, " sp=");
++  out = AppendEinkSignalHex(out, end, sp);
++  *out = '\0';
++  logger::writeToCrashLog(line);
++}
++#endif  // defined(__ANDROID__)
++
+ }  // namespace
+ 
++void SetEinkPrimarySignalLoggingEnabled(bool enabled) {
++  g_eink_primary_signal_logging_enabled = enabled ? 1 : 0;
++}
++
+ // Runs before crashing: normal context.
+ ExceptionHandler::ExceptionHandler(const MinidumpDescriptor& descriptor,
+                                    FilterCallback filter,
+@@ -424,7 +497,7 @@ int ExceptionHandler::ThreadEntry(void *arg) {
+ 
+ // This function runs in a compromised context: see the top of the file.
+ // Runs on the crashing thread.
+-bool ExceptionHandler::HandleSignal(int /*sig*/, siginfo_t* info, void* uc) {
++bool ExceptionHandler::HandleSignal(int sig, siginfo_t* info, void* uc) {
+   if (filter_ && !filter_(callback_context_))
+     return false;
+ 
+@@ -459,6 +532,11 @@ bool ExceptionHandler::HandleSignal(int /*sig*/, siginfo_t* info, void* uc) {
+   }
+ #endif
+   g_crash_context_.tid = syscall(__NR_gettid);
++#if defined(__ANDROID__)
++  if (g_eink_primary_signal_logging_enabled) {
++    LogEinkPrimarySignal(sig, info, uc, g_crash_context_.tid);
++  }
++#endif
+   if (crash_handler_ != NULL) {
+     if (crash_handler_(&g_crash_context_, sizeof(g_crash_context_),
+                        callback_context_)) {
+diff --git a/client/linux/handler/exception_handler.h b/client/linux/handler/exception_handler.h
+index 591c310855702c6b1df4ed9a3389c816dd044122..d4a281423686e0c3636b4f41330cec3b7b6c8893 100644
+--- a/client/linux/handler/exception_handler.h
++++ b/client/linux/handler/exception_handler.h
+@@ -46,6 +46,10 @@
+ 
+ namespace google_breakpad {
+ 
++// Enables a fixed-format, crash-log-only diagnostic record immediately before
++// Breakpad begins dump generation. The flag is set during normal startup.
++void SetEinkPrimarySignalLoggingEnabled(bool enabled);
++
+ // ExceptionHandler
+ //
+ // ExceptionHandler can write a minidump file when an exception occurs,
