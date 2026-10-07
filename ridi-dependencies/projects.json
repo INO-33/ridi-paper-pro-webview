@@ -18,12 +18,11 @@
       "patch": "patches/src/third_party/swiftshader.patch",
       "patch_sha256": "ae342cbda315751466e601fb3fa60c11467d96d77c2c9d5c2723bdec6aefea54",
       "gitlink_targets": {
-        "third_party/googletest": "ecd530865cefdfa7dea58e84f6aa1b548950363d",
         "third_party/pnacl-subzero": "c48bb8b02c98ae49438e43aa1143a958784822a5"
       },
       "previous_snapshot_commit": "5bdd0673f2040a902ef08bac8aac007ea2481238",
       "archived_provenance_repository": "INO-33/RIDI_ANDROID8_CHROMIUM_DEPS_SRC_THIRD_PARTY_SWIFTSHADER"
     }
   ],
-  "restore_source_equivalence_verified": true
+  "restore_source_equivalence_verified": false
 }
