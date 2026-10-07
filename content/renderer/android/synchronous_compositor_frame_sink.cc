@@ -8,7 +8,6 @@
 
 #include "base/auto_reset.h"
 #include "base/location.h"
-#include "base/logging.h"
 #include "base/macros.h"
 #include "base/memory/ptr_util.h"
 #include "base/single_thread_task_runner.h"
@@ -117,7 +116,7 @@ SynchronousCompositorFrameSink::SynchronousCompositorFrameSink(
     : cc::CompositorFrameSink(std::move(context_provider),
                               std::move(worker_context_provider),
                               gpu_memory_buffer_manager,
-                              nullptr),
+                              shared_bitmap_manager),
       routing_id_(routing_id),
       compositor_frame_sink_id_(compositor_frame_sink_id),
       registry_(registry),
@@ -424,14 +423,14 @@ void SynchronousCompositorFrameSink::SetMemoryPolicy(size_t bytes_limit) {
   if (client_)
     client_->SetMemoryPolicy(memory_policy_);
 
-  if (became_zero) {
-    // This is small hack to drop context resources without destroying it
-    // when this compositor is put into the background.
-    context_provider()->ContextSupport()->SetAggressivelyFreeResources(
-        true /* aggressively_free_resources */);
-  } else if (became_non_zero) {
-    context_provider()->ContextSupport()->SetAggressivelyFreeResources(
-        false /* aggressively_free_resources */);
+  if (became_zero || became_non_zero) {
+    // This is a small hack to drop context resources without destroying it
+    // when this compositor is put into the background. Software-only
+    // compositors have no context support to notify.
+    if (context_provider() && context_provider()->ContextSupport()) {
+      context_provider()->ContextSupport()->SetAggressivelyFreeResources(
+          became_zero /* aggressively_free_resources */);
+    }
   }
 }
 

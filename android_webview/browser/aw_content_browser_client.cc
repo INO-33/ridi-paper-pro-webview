@@ -276,6 +276,14 @@ void AwContentBrowserClient::AppendExtraCommandLineSwitches(
     // The only kind of a child process WebView can have is renderer.
     DCHECK_EQ(switches::kRendererProcess,
               command_line->GetSwitchValueASCII(switches::kProcessType));
+    if (base::CommandLine::ForCurrentProcess()->HasSwitch(
+            switches::kEinkCp2aSoftwareFirst)) {
+      command_line->AppendSwitch(switches::kEinkCp2aSoftwareFirst);
+    }
+    if (base::CommandLine::ForCurrentProcess()->HasSwitch(
+            switches::kEinkCp2aDisableAutoSoftware)) {
+      command_line->AppendSwitch(switches::kEinkCp2aDisableAutoSoftware);
+    }
     // Pass crash reporter enabled state to renderer processes.
     if (crash_reporter::IsCrashReporterEnabled()) {
       command_line->AppendSwitch(::switches::kEnableCrashReporter);

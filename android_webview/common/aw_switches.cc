@@ -12,5 +12,8 @@ const char kWebViewSandboxedRenderer[] = "webview-sandboxed-renderer";
 // used to enable safebrowsing functionality in webview
 const char kWebViewEnableSafeBrowsingSupport[] =
     "webview-enable-safebrowsing-support";
+const char kEinkCp2aSoftwareFirst[] = "eink-cp2a-software-first";
+const char kEinkCp2aDisableAutoSoftware[] =
+    "eink-cp2a-disable-auto-software";
 
 }  // namespace switches

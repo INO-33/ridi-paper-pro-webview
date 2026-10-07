@@ -21,6 +21,9 @@ template("system_webview_apk_tmpl") {
 
     shared_resources = true
     shared_libraries = [ "//android_webview:libwebviewchromium" ]
+    # Android O's system WebView loader maps the native library directly from
+    # the APK; keep it stored rather than deflated like the stock provider.
+    uncompress_shared_libraries = true
     native_lib_version_rule = "//build/util:chrome_version_json"
     _native_lib_file =
         rebase_path("$root_gen_dir/CHROME_VERSION.json", root_out_dir)

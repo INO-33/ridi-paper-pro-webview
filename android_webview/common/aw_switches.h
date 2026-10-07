@@ -10,6 +10,8 @@ namespace switches {
 extern const char kSyncOnDrawHardware[];
 extern const char kWebViewSandboxedRenderer[];
 extern const char kWebViewEnableSafeBrowsingSupport[];
+extern const char kEinkCp2aSoftwareFirst[];
+extern const char kEinkCp2aDisableAutoSoftware[];
 
 // Please note that if you are adding a flag that is intended for a renderer,
 // you also need to add it into

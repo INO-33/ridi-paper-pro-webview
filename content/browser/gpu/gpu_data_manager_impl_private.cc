@@ -350,9 +350,6 @@ bool GpuDataManagerImplPrivate::GpuAccessAllowed(
     return false;
   }
 
-  if (in_process_gpu_)
-    return true;
-
   if (card_blacklisted_) {
     if (reason) {
       *reason = "GPU access is disabled ";
@@ -364,6 +361,12 @@ bool GpuDataManagerImplPrivate::GpuAccessAllowed(
     }
     return false;
   }
+
+  // In-process GPU is still subject to an explicit --disable-gpu decision.
+  // The old ordering let single-process WebView create InProcessGpuThread
+  // after DisableHardwareAcceleration() had blacklisted every feature.
+  if (in_process_gpu_)
+    return true;
 
   if (preliminary_blacklisted_features_initialized_) {
     // We only need to block GPU process if more features are disallowed other

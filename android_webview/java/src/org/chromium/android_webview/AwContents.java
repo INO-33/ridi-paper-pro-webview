@@ -1703,6 +1703,10 @@ public class AwContents implements SmartClipProvider {
         mAwViewMethods.setLayerType(layerType, paint);
     }
 
+    public boolean isEinkSoftwareFirst() {
+        return nativeIsEinkSoftwareFirst();
+    }
+
     int getEffectiveBackgroundColor() {
         // Do not ask the ContentViewCore for the background color, as it will always
         // report white prior to initial navigation or post destruction,  whereas we want
@@ -3392,6 +3396,7 @@ public class AwContents implements SmartClipProvider {
     private static native void nativeDestroy(long nativeAwContents);
     private static native void nativeSetForceAuxiliaryBitmapRendering(
             boolean forceAuxiliaryBitmapRendering);
+    private static native boolean nativeIsEinkSoftwareFirst();
     private static native void nativeSetAwDrawSWFunctionTable(long functionTablePointer);
     private static native void nativeSetAwDrawGLFunctionTable(long functionTablePointer);
     private static native int nativeGetNativeInstanceCount();

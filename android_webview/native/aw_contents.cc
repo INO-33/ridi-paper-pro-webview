@@ -391,6 +391,15 @@ static void SetForceAuxiliaryBitmapRendering(
   g_force_auxiliary_bitmap_rendering = force_auxiliary_bitmap_rendering;
 }
 
+static jboolean IsEinkSoftwareFirst(
+    JNIEnv*,
+    const JavaParamRef<jclass>&) {
+  return base::CommandLine::ForCurrentProcess()->HasSwitch(
+             switches::kEinkCp2aSoftwareFirst)
+      ? JNI_TRUE
+      : JNI_FALSE;
+}
+
 static void SetAwDrawSWFunctionTable(JNIEnv* env,
                                      const JavaParamRef<jclass>&,
                                      jlong function_table) {

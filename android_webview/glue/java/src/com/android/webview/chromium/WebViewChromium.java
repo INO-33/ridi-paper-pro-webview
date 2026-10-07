@@ -104,6 +104,7 @@ class WebViewChromium implements WebViewProvider, WebViewProvider.ScrollDelegate
     private WebViewChromiumFactoryProvider mFactory;
 
     private final boolean mShouldDisableThreadChecking;
+    private boolean mEinkSoftwareLayerApplied;
 
     private static boolean sRecordWholeDocumentEnabledByApi;
     static void enableSlowWholeDocumentDraw() {
@@ -232,6 +233,8 @@ class WebViewChromium implements WebViewProvider, WebViewProvider.ScrollDelegate
                 new InternalAccessAdapter(), new WebViewNativeDrawGLFunctorFactory(),
                 mContentsClientAdapter, mWebSettings.getAwSettings());
 
+        applyEinkSoftwareLayerIfNeeded();
+
         if (mAppTargetSdkVersion >= Build.VERSION_CODES.KITKAT) {
             // On KK and above, favicons are automatically downloaded as the method
             // old apps use to enable that behavior is deprecated.
@@ -246,6 +249,15 @@ class WebViewChromium implements WebViewProvider, WebViewProvider.ScrollDelegate
 
         // TODO: This assumes AwContents ignores second Paint param.
         mAwContents.setLayerType(mWebView.getLayerType(), null);
+    }
+
+    private void applyEinkSoftwareLayerIfNeeded() {
+        if (mAwContents == null || mEinkSoftwareLayerApplied
+                || !mAwContents.isEinkSoftwareFirst()) {
+            return;
+        }
+        mWebView.setLayerType(View.LAYER_TYPE_SOFTWARE, null);
+        mEinkSoftwareLayerApplied = true;
     }
 
     private RuntimeException createThreadException() {

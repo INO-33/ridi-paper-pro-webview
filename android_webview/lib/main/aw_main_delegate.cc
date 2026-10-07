@@ -5,6 +5,8 @@
 #include "android_webview/lib/main/aw_main_delegate.h"
 
 #include <memory>
+#include <string.h>
+#include <sys/system_properties.h>
 
 #include "android_webview/browser/aw_content_browser_client.h"
 #include "android_webview/browser/aw_safe_browsing_config_helper.h"
@@ -31,7 +33,6 @@
 #include "base/debug/crash_logging.h"
 #include "base/i18n/icu_util.h"
 #include "base/lazy_instance.h"
-#include "base/logging.h"
 #include "base/strings/string_number_conversions.h"
 #include "base/threading/thread_restrictions.h"
 #include "cc/base/switches.h"
@@ -61,6 +62,45 @@ namespace {
 // resolved - http://crbug.com/240453. See AwMainDelegate::RunProcess below.
 base::LazyInstance<std::unique_ptr<ScopedAllowWaitForLegacyWebViewApi>>
     g_allow_wait_in_ui_thread = LAZY_INSTANCE_INITIALIZER;
+
+bool IsRidiEinkTarget() {
+  static char property[PROP_VALUE_MAX] = {};
+  __system_property_get("ro.ridi.eink_mode", property);
+  const char* device = base::android::BuildInfo::GetInstance()->device();
+  const bool property_enabled = strcmp(property, "true") == 0;
+  const bool known_ridi_device =
+      strcmp(device, "e70q10") == 0 || strcmp(device, "e70q10_emulator") == 0;
+  return property_enabled || known_ridi_device;
+}
+
+void ApplyCp2aSoftwarePolicy(base::CommandLine* command_line) {
+  const bool explicit_policy =
+      command_line->HasSwitch(switches::kEinkCp2aSoftwareFirst);
+  const bool auto_disabled =
+      command_line->HasSwitch(switches::kEinkCp2aDisableAutoSoftware);
+  const bool ridi_target = IsRidiEinkTarget();
+  const bool auto_policy = ridi_target && !auto_disabled;
+  const bool enabled = explicit_policy || auto_policy;
+  if (enabled) {
+    // RIDI software-first is a true no-GPU mode.  The compositor switch alone
+    // still permits later WebGL/feature requests to start the GPU process.
+    command_line->AppendSwitch(::switches::kDisableGpu);
+    command_line->AppendSwitch(::switches::kDisableGpuCompositing);
+    command_line->AppendSwitch(::switches::kDisableGpuRasterization);
+    // M58 otherwise promotes a blacklisted GPU to SwiftShader when a
+    // SwiftShader path is available.  Keep this distinct from Skia's normal
+    // CPU rasterization, which remains the software compositor path.
+    command_line->AppendSwitch(::switches::kDisableSoftwareRasterizer);
+    // RIDI's software-first compositor has no usable GLES2 implementation.
+    // Reuse the existing Content startup contract to leave GPU information
+    // unavailable instead of entering Android's mandatory ES2 probe. This is
+    // scoped to the same canonical policy as the CPU compositor selection.
+    command_line->AppendSwitch(::switches::kSkipGpuDataLoading);
+    // This same mode marker is forwarded to the renderer so the Android
+    // synchronous CPU sink is selected without a second public selector.
+    command_line->AppendSwitch(switches::kEinkCp2aSoftwareFirst);
+  }
+}
 }
 
 AwMainDelegate::AwMainDelegate() {
@@ -73,6 +113,11 @@ bool AwMainDelegate::BasicStartupComplete(int* exit_code) {
   content::SetContentClient(&content_client_);
 
   base::CommandLine* cl = base::CommandLine::ForCurrentProcess();
+
+  // Establish the E Ink software-first policy before browser/GPU feature
+  // initialization. The renderer receives the sink selector through
+  // AwContentBrowserClient::AppendExtraCommandLineSwitches.
+  ApplyCp2aSoftwarePolicy(cl);
 
   // WebView uses the Android system's scrollbars and overscroll glow.
   cl->AppendSwitch(switches::kDisableOverscrollEdgeEffect);

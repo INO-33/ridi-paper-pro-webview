@@ -204,7 +204,12 @@ class WebViewDelegateFactory {
 
         @Override
         public boolean isMultiProcessEnabled() {
-            throw new UnsupportedOperationException();
+            try {
+                Method method = mDelegate.getClass().getMethod("isMultiProcessEnabled");
+                return (Boolean) method.invoke(mDelegate);
+            } catch (Exception e) {
+                throw new RuntimeException("Invalid reflection", e);
+            }
         }
     }
 

@@ -1895,6 +1895,16 @@ RenderThreadImpl::CreateCompositorFrameSink(
 
   if (use_software) {
     DCHECK(!layout_test_mode());
+#if defined(OS_ANDROID)
+    if (command_line.HasSwitch("eink-cp2a-software-first") &&
+        sync_compositor_message_filter_) {
+      return base::MakeUnique<SynchronousCompositorFrameSink>(
+          nullptr, nullptr, nullptr, shared_bitmap_manager(), routing_id,
+          compositor_frame_sink_id, CreateExternalBeginFrameSource(routing_id),
+          sync_compositor_message_filter_.get(),
+          std::move(frame_swap_message_queue));
+    }
+#endif
     return base::MakeUnique<RendererCompositorFrameSink>(
         routing_id, compositor_frame_sink_id,
         CreateExternalBeginFrameSource(routing_id), nullptr, nullptr, nullptr,

@@ -14,6 +14,9 @@ import("//tools/resources/generate_resource_whitelist.gni")
 declare_args() {
   # Package name of the system_webview_apk target.
   system_webview_package_name = "com.android.webview"
+
+  # Android O rejects WebView providers targeting an older framework release.
+  system_webview_target_sdk_version = "26"
 }
 
 if (!defined(use_webview_internal_framework)) {
@@ -39,7 +42,10 @@ group("android_webview") {
 jinja_template("system_webview_manifest") {
   input = "apk/java/AndroidManifest.xml"
   output = system_webview_android_manifest
-  variables = [ "package=$system_webview_package_name" ]
+  variables = [
+    "package=$system_webview_package_name",
+    "targetsdk=$system_webview_target_sdk_version",
+  ]
 }
 
 webview_repack_locales("repack_locales") {
