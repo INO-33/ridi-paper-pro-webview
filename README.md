@@ -3,7 +3,7 @@
 RIDI Android 8 제품의 커스텀 WebView 소스입니다. Chromium 58.0.3029.125 기반으로
 Android O 연동과 RIDI E Ink의 소프트웨어 우선 렌더링 경로를 보존합니다.
 
-**전체 프로젝트:** [메인 manifest 저장소](https://github.com/INO-33/RIDI_ANDROID8_MANIFEST)
+**전체 프로젝트:** [메인 manifest 저장소](https://github.com/INO-33/ridi-paper-pro)
 
 ## 보관 범위
 
@@ -29,7 +29,7 @@ DEPOT_TOOLS_ROOT="$RIDI_WORKSPACE/depot_tools" \
 ```
 
 x86은 `build_m58_xenial_x86.sh`를 사용합니다. 빌드 스크립트와 Ubuntu Xenial용
-Dockerfile은 [빌드 도구 저장소](https://github.com/INO-33/RIDI_ANDROID8_BUILD_TOOLS)의
+Dockerfile은 [빌드 도구 저장소](https://github.com/INO-33/ridi-paper-pro-dev-tools)의
 `tools/chromium-m58-build/`에 있습니다. Docker와 외부 Chromium 의존성 다운로드가
 필요하며 로그는 작업 폴더의 `.orchestrator/logs/`에 남습니다.
 
