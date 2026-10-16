@@ -46,3 +46,8 @@ Android 이미지 빌드는 기기 저장소에 보존한 WebView APK를 사용�
 체크포인트: **2026-10-16**. 오래된 DEPS·컨테이너 패키지의 장기 보존 및 새 환경
 전체 재빌드는 추가 검증 항목입니다. Chromium 라이선스는 [`LICENSE`](LICENSE)를
 따릅니다.
+
+## 개발환경과 공개 전 자산 검토
+
+처음 구성하는 개발자는 메인 저장소의 [개발환경 구축 안내](https://github.com/INO-33/ridi-paper-pro/blob/checkpoint-20261016/DEVELOPMENT.md)를 따릅니다.
+공개 전 제외·확인 대상은 [공개 자산 목록](https://github.com/INO-33/ridi-paper-pro/blob/checkpoint-20261016/PUBLIC_ASSETS.md)에 있습니다.
