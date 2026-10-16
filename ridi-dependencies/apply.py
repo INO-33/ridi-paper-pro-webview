@@ -57,7 +57,7 @@ for row, project, patch in pending:
     commit = git(project, '-c', 'user.name=RIDI checkpoint restore',
                  '-c', 'user.email=ridi-restore@localhost',
                  'commit-tree', row['result_tree'], '-p', row['base_commit'],
-                 '-m', 'Restore RIDI consolidated checkpoint 2026-10-07')
+                 '-m', 'Restore RIDI ' + metadata['checkpoint'])
     # A detached local checkpoint commit does not replace upstream refs. The
     # index and files already match this tree, so only HEAD moves here.
     git(project, 'update-ref', '--no-deref', 'HEAD', commit, row['base_commit'])
