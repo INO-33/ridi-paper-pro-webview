@@ -1,5 +1,5 @@
 {
-  "checkpoint": "checkpoint-20261016",
+  "checkpoint": "checkpoint-20261027",
   "projects": [
     {
       "path": "src/breakpad/src",
@@ -10,21 +10,21 @@
       "gitlink_targets": {},
       "previous_snapshot_commit": "32367feafdaf00db1a5a690bc7d73e843d9b8080",
       "archived_provenance_repository": "INO-33/RIDI_ANDROID8_CHROMIUM_DEPS_SRC_BREAKPAD_SRC",
-      "source_checkpoint": "2026-10-16",
+      "source_checkpoint": "2026-10-27",
       "original_working_head": "32f4ba2a1f6c23343870ee4a852df67d900dafe4"
     },
     {
       "path": "src/third_party/swiftshader",
       "base_commit": "91da6b00584afd7dcaed66da88e2b617429b3950",
-      "result_tree": "883e4230c96001d2760b884b5137958eee6de137",
+      "result_tree": "0a5c0edf762c1f350a8fbc919d90c320ccbad16b",
       "patch": "patches/src/third_party/swiftshader.patch",
-      "patch_sha256": "ae342cbda315751466e601fb3fa60c11467d96d77c2c9d5c2723bdec6aefea54",
+      "patch_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
       "gitlink_targets": {
         "third_party/pnacl-subzero": "c48bb8b02c98ae49438e43aa1143a958784822a5"
       },
       "previous_snapshot_commit": "5bdd0673f2040a902ef08bac8aac007ea2481238",
       "archived_provenance_repository": "INO-33/RIDI_ANDROID8_CHROMIUM_DEPS_SRC_THIRD_PARTY_SWIFTSHADER",
-      "source_checkpoint": "2026-10-16",
+      "source_checkpoint": "2026-10-27",
       "original_working_head": "91da6b00584afd7dcaed66da88e2b617429b3950"
     }
   ],
