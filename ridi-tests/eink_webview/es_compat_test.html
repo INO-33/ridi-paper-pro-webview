@@ -1,0 +1,205 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ES_COMPAT</title>
+<style>
+  body { font: 16px sans-serif; margin: 12px; background: #fff; color: #000; }
+  .PASS { color: #000; }
+  .FAIL { color: #000; font-weight: bold; text-decoration: underline; }
+  #summary { font-size: 22px; font-weight: bold; margin-bottom: 8px; }
+  li { margin: 2px 0; }
+</style>
+<script>
+// Harness. Kept in ES5 so it parses on any engine.  Each test case is either
+// evaluated from a string (so a SyntaxError is a FAIL for that case only) or
+// lives in its own <script> block below.
+var ES = { results: [], pending: 0, finished: false };
+function esReport(name, ok, detail) {
+  var status = ok ? "PASS" : "FAIL";
+  ES.results.push({ name: name, ok: ok });
+  console.log("ES_COMPAT " + name + "=" + status + " " + (detail || ""));
+  var li = document.createElement("li");
+  li.className = status;
+  li.textContent = name + " = " + status + (detail ? " (" + detail + ")" : "");
+  document.getElementById("list").appendChild(li);
+}
+function esErr(e) { return e && e.name ? e.name + ": " + e.message : String(e); }
+// Sync case: src is evaluated with indirect eval, check(value) -> [ok, detail].
+function esCase(name, src, check) {
+  try {
+    var v = (0, eval)(src);
+    var r = check(v);
+    esReport(name, r[0], r[1]);
+  } catch (e) {
+    esReport(name, false, esErr(e));
+  }
+}
+// Async case: src must evaluate to a Promise.
+function esAsync(name, src, check) {
+  var p;
+  try { p = (0, eval)(src); } catch (e) { esReport(name, false, esErr(e)); return; }
+  ES.pending++;
+  p.then(function (v) {
+    var r; try { r = check(v); } catch (e) { r = [false, esErr(e)]; }
+    esReport(name, r[0], r[1]);
+  }, function (e) {
+    esReport(name, false, "rejected " + esErr(e));
+  }).then(function () { ES.pending--; esMaybeDone(); });
+}
+// Negative case: src must throw SyntaxError.
+function esSyntaxError(name, src) {
+  try { (0, eval)(src); esReport(name, false, "no SyntaxError"); }
+  catch (e) { esReport(name, e instanceof SyntaxError, esErr(e)); }
+}
+function esMaybeDone() {
+  if (ES.finished || ES.pending > 0 || !ES.syncDone) return;
+  ES.pending = -1;
+  ES.finished = true;
+  var pass = 0, fail = 0;
+  for (var i = 0; i < ES.results.length; i++) { if (ES.results[i].ok) pass++; else fail++; }
+  document.getElementById("summary").textContent =
+      "ES_COMPAT_DONE pass=" + pass + " fail=" + fail;
+  document.title = "ES_COMPAT " + (fail === 0 ? "ALL_PASS" : "FAIL") + " " + pass + "/" + (pass + fail);
+  console.log("ES_COMPAT_DONE pass=" + pass + " fail=" + fail);
+}
+function esFlag(name) { return !!window[name]; }
+</script>
+</head>
+<body>
+<div id="summary">ES_COMPAT running</div>
+<ol id="list"></ol>
+
+<!-- Script-level optional catch: each block is independent so a SyntaxError
+     in one block cannot hide results of the others. -->
+<script>
+window.__topCatch = false;
+try { throw new Error("x"); } catch { window.__topCatch = true; }
+</script>
+<script>
+window.__topCatchFinally = "";
+try { throw 1; } catch { window.__topCatchFinally += "c"; } finally { window.__topCatchFinally += "f"; }
+</script>
+
+<!-- Lazy (preparser) path: function declarations that are not called at
+     load time.  The padding pushes the outer function well past any
+     preparse size threshold so the inner bodies are preparsed first and
+     fully parsed only when called later. -->
+<script>
+function __lazyOuter() {
+  var pad = [];
+  function pad01() { pad.push("0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"); }
+  function pad02() { pad.push("0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"); }
+  function pad03() { pad.push("0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"); }
+  function pad04() { pad.push("0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"); }
+  function pad05() { pad.push("0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"); }
+  function pad06() { pad.push("0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"); }
+  function pad07() { pad.push("0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"); }
+  function pad08() { pad.push("0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"); }
+  function pad09() { pad.push("0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"); }
+  function pad10() { pad.push("0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"); }
+  function pad11() { pad.push("0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"); }
+  function pad12() { pad.push("0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"); }
+  function pad13() { pad.push("0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"); }
+  function pad14() { pad.push("0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"); }
+  function pad15() { pad.push("0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"); }
+  function pad16() { pad.push("0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"); }
+  function middle() {
+    var e = "outer-e";
+    function innermost(kind) {
+      var log = [];
+      try {
+        try { throw new Error(kind); } catch { log.push("c1"); }
+        try { log.push("t2"); } catch { log.push("bad"); } finally { log.push("f2"); }
+        try { throw 0; } catch { let shadow = "let-in-catch"; log.push(shadow); }
+        try { throw 0; } catch { log.push(e); }
+        var nested = function () { try { throw 1; } catch { return "nested"; } };
+        log.push(nested());
+      } catch (outer) {
+        log.push("outer:" + outer);
+      }
+      return log.join(",");
+    }
+    return innermost("lazy");
+  }
+  pad01(); pad02(); pad03(); pad04(); pad05(); pad06(); pad07(); pad08();
+  pad09(); pad10(); pad11(); pad12(); pad13(); pad14(); pad15(); pad16();
+  return middle();
+}
+window.__lazyDefined = typeof __lazyOuter === "function";
+</script>
+
+<script>
+// ---- Object spread / rest -------------------------------------------------
+esCase("spread_basic", "var a={p:1,q:2}; ({...a, b:1})", function (v) {
+  return [v.p === 1 && v.q === 2 && v.b === 1 && Object.keys(v).join() === "p,q,b", JSON.stringify(v)];
+});
+esCase("spread_override_order", "var a={b:9}; [({...a, b:1}).b, ({b:1, ...a}).b]", function (v) {
+  return [v[0] === 1 && v[1] === 9, JSON.stringify(v)];
+});
+esCase("spread_null_undefined", "[({...null}), ({...undefined}), ({...1}), ({...'ab'})]", function (v) {
+  return [Object.keys(v[0]).length === 0 && Object.keys(v[1]).length === 0 &&
+          Object.keys(v[2]).length === 0 && v[3][0] === "a" && v[3][1] === "b", JSON.stringify(v)];
+});
+esCase("rest_destructure", "var o={x:1,y:2,z:3}; const {x, ...rest} = o; [x, rest]", function (v) {
+  return [v[0] === 1 && !("x" in v[1]) && v[1].y === 2 && v[1].z === 3, JSON.stringify(v)];
+});
+esCase("rest_param_destructure", "(function({a, ...others}){ return [a, Object.keys(others).join()]; })({a:1,b:2,c:3})", function (v) {
+  return [v[0] === 1 && v[1] === "b,c", JSON.stringify(v)];
+});
+esCase("spread_getter_order", "var log=[]; var g={get a(){log.push('a');return 1}, get b(){log.push('b');return 2}}; var r={...g}; [log.join(), r.a, r.b, Object.getOwnPropertyDescriptor(r,'a').get === undefined]", function (v) {
+  return [v[0] === "a,b" && v[1] === 1 && v[2] === 2 && v[3] === true, JSON.stringify(v)];
+});
+esCase("spread_symbol_key", "var s=Symbol('k'); var src={[s]:7, n:1}; var r={...src}; [r[s], r.n, Object.getOwnPropertySymbols(r).length]", function (v) {
+  return [v[0] === 7 && v[1] === 1 && v[2] === 1, String(v[0]) + "," + v[1] + "," + v[2]];
+});
+esCase("spread_skips_nonenumerable", "var src=Object.defineProperty({v:1},'h',{value:2,enumerable:false}); var r={...src}; ['h' in r, r.v]", function (v) {
+  return [v[0] === false && v[1] === 1, JSON.stringify(v)];
+});
+
+// ---- Optional catch binding ----------------------------------------------
+esCase("catch_toplevel_script", "window.__topCatch", function (v) { return [v === true, String(v)]; });
+esCase("catch_finally_script", "window.__topCatchFinally", function (v) { return [v === "cf", String(v)]; });
+esCase("catch_eval_toplevel", "var r; try { throw 1; } catch { r = 'ok'; } r", function (v) { return [v === "ok", String(v)]; });
+esCase("catch_finally_eval", "var r=''; try { throw 1; } catch { r += 'c'; } finally { r += 'f'; } r", function (v) { return [v === "cf", v]; });
+esCase("catch_no_throw", "var r='t'; try { r += '1'; } catch { r += 'x'; } r", function (v) { return [v === "t1", v]; });
+esCase("catch_arrow", "(() => { try { throw 1; } catch { return 'arrow'; } })()", function (v) { return [v === "arrow", String(v)]; });
+esCase("catch_class_method", "class K { m() { try { throw 1; } catch { return 'method'; } } static s() { try { throw 1; } catch { return 'static'; } } }; [new K().m(), K.s()].join()", function (v) { return [v === "method,static", String(v)]; });
+esCase("catch_generator", "function* g() { try { yield 1; throw 2; } catch { yield 'gen'; } } var it=g(); [it.next().value, it.next().value].join()", function (v) { return [v === "1,gen", String(v)]; });
+esCase("catch_outer_binding_visible", "var e='outer'; var r; try { throw 'inner'; } catch { r = e; } r", function (v) { return [v === "outer", String(v)]; });
+esCase("catch_let_in_block", "var r; try { throw 1; } catch { let x = 'block'; r = x; } r", function (v) { return [v === "block", String(v)]; });
+esCase("catch_strict", "(function(){ 'use strict'; try { throw 1; } catch { return 'strict'; } })()", function (v) { return [v === "strict", String(v)]; });
+esCase("catch_new_function", "new Function(\"try { throw 1; } catch { return 'fn'; }\")()", function (v) { return [v === "fn", String(v)]; });
+esCase("catch_lazy_preparsed", "window.__lazyDefined ? __lazyOuter() : 'lazy script not compiled'", function (v) {
+  return [v === "c1,t2,f2,let-in-catch,outer-e,nested", String(v)];
+});
+esAsync("catch_async_fn", "(async function(){ try { await Promise.reject(1); } catch { return 'async'; } })()", function (v) { return [v === "async", String(v)]; });
+esAsync("catch_async_arrow", "(async () => { try { await null; throw 1; } catch { return 'async-arrow'; } finally { } })()", function (v) { return [v === "async-arrow", String(v)]; });
+
+// ---- Regression: existing catch forms -----------------------------------
+esCase("regress_catch_ident", "var r; try { throw new Error('m1'); } catch (e) { r = e.message; } r", function (v) { return [v === "m1", String(v)]; });
+esCase("regress_catch_destructure", "var r; try { throw new Error('m2'); } catch ({message}) { r = message; } r", function (v) { return [v === "m2", String(v)]; });
+esCase("regress_catch_array_destructure", "var r; try { throw [3,4]; } catch ([a, b]) { r = a + b; } r", function (v) { return [v === 7, String(v)]; });
+esCase("regress_catch_scope", "var e='outer'; try { throw 'inner'; } catch (e) { } e", function (v) { return [v === "outer", String(v)]; });
+esSyntaxError("regress_catch_let_redecl_error", "try {} catch (e) { let e; }");
+
+// ---- Negative: still SyntaxError -----------------------------------------
+esSyntaxError("neg_try_catch_eof", "try{}catch");
+esSyntaxError("neg_catch_empty_parens", "try{}catch(){}");
+esSyntaxError("neg_catch_no_block", "try{}catch;");
+esSyntaxError("neg_try_alone", "try{}");
+
+// ---- RegExp lookbehind ---------------------------------------------------
+esCase("regexp_lookbehind_positive", "/(?<=\\$)\\d+/.exec('$42')[0]", function (v) { return [v === "42", String(v)]; });
+esCase("regexp_lookbehind_negative", "[/(?<!a)b/.test('ab'), /(?<!a)b/.test('cb')]", function (v) { return [v[0] === false && v[1] === true, JSON.stringify(v)]; });
+esCase("regexp_lookbehind_ctor", "new RegExp('(?<=\\\\$)\\\\d+').exec('$7')[0]", function (v) { return [v === "7", String(v)]; });
+
+ES.syncDone = true;
+esMaybeDone();
+setTimeout(function () {
+  if (!ES.finished) { esReport("async_timeout", false, "pending=" + ES.pending); ES.pending = 0; esMaybeDone(); }
+}, 10000);
+</script>
+</body>
+</html>

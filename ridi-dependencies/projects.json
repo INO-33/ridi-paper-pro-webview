@@ -1,5 +1,5 @@
 {
-  "checkpoint": "checkpoint-20261027",
+  "checkpoint": "checkpoint-20261110",
   "projects": [
     {
       "path": "src/breakpad/src",
@@ -26,6 +26,17 @@
       "archived_provenance_repository": "INO-33/RIDI_ANDROID8_CHROMIUM_DEPS_SRC_THIRD_PARTY_SWIFTSHADER",
       "source_checkpoint": "2026-10-27",
       "original_working_head": "91da6b00584afd7dcaed66da88e2b617429b3950"
+    },
+    {
+      "path": "src/v8",
+      "base_commit": "2f06375912a79b55603cc75306738101921ce80a",
+      "result_tree": "49af76f4a4b849fe21078519ba0f9452bb817b3e",
+      "patch": "patches/src/v8.patch",
+      "patch_sha256": "c9fa2b3f24c379f3fa71c3bc48824ed5c77dc327546e6af7089429a1bacec276",
+      "gitlink_targets": {},
+      "source_checkpoint": "2026-11-10",
+      "original_working_head": "2f06375912a79b55603cc75306738101921ce80a",
+      "description": "CP2-D2-JSCOMPAT: ES2019 optional catch binding backport (parser-base.h, parser.cc)"
     }
   ],
   "restore_source_equivalence_verified": true

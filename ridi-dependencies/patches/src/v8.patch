@@ -1,0 +1,82 @@
+diff --git a/src/parsing/parser-base.h b/src/parsing/parser-base.h
+index cf56c53a8e9e41d1feb76df598119a74bab567c8..6a0e636cedaf4b918f0158a86875e1137ef06596 100644
+--- a/src/parsing/parser-base.h
++++ b/src/parsing/parser-base.h
+@@ -5317,6 +5317,7 @@ typename ParserBase<Impl>::StatementT ParserBase<Impl>::ParseTryStatement(
+   //
+   // Catch ::
+   //   'catch' '(' Identifier ')' Block
++  //   'catch' Block
+   //
+   // Finally ::
+   //   'finally' Block
+@@ -5341,7 +5342,13 @@ typename ParserBase<Impl>::StatementT ParserBase<Impl>::ParseTryStatement(
+ 
+   BlockT catch_block = impl()->NullBlock();
+   if (Check(Token::CATCH)) {
+-    Expect(Token::LPAREN, CHECK_OK);
++    // RIDI E Ink: ES2019 optional catch binding backport.
++    // `catch { ... }` leaves catch_info.name/pattern empty; the parser then
++    // binds the hidden `.catch` variable already used by destructuring catch.
++    const bool has_binding = peek() != Token::LBRACE;
++    if (has_binding) {
++      Expect(Token::LPAREN, CHECK_OK);
++    }
+     catch_info.scope = NewScope(CATCH_SCOPE);
+     catch_info.scope->set_start_position(scanner()->location().beg_pos);
+ 
+@@ -5364,16 +5371,18 @@ typename ParserBase<Impl>::StatementT ParserBase<Impl>::ParseTryStatement(
+         // ExpressionFromIdentifier from being called in the first
+         // branch, which would introduce an unresolved symbol and mess
+         // with arrow function names.
+-        if (peek_any_identifier()) {
+-          catch_info.name =
+-              ParseIdentifier(kDontAllowRestrictedIdentifiers, CHECK_OK);
+-        } else {
+-          ExpressionClassifier pattern_classifier(this);
+-          catch_info.pattern = ParsePrimaryExpression(CHECK_OK);
+-          ValidateBindingPattern(CHECK_OK);
+-        }
++        if (has_binding) {
++          if (peek_any_identifier()) {
++            catch_info.name =
++                ParseIdentifier(kDontAllowRestrictedIdentifiers, CHECK_OK);
++          } else {
++            ExpressionClassifier pattern_classifier(this);
++            catch_info.pattern = ParsePrimaryExpression(CHECK_OK);
++            ValidateBindingPattern(CHECK_OK);
++          }
+ 
+-        Expect(Token::RPAREN, CHECK_OK);
++          Expect(Token::RPAREN, CHECK_OK);
++        }
+         impl()->RewriteCatchPattern(&catch_info, CHECK_OK);
+         if (!impl()->IsNullStatement(catch_info.init_block)) {
+           catch_block->statements()->Add(catch_info.init_block, zone());
+diff --git a/src/parsing/parser.cc b/src/parsing/parser.cc
+index cc6b6a260b2dfcec45d0cd3019bc8536d6f4e0b9..575612ef22a010e5ad893e8c79c985b8af9a923b 100644
+--- a/src/parsing/parser.cc
++++ b/src/parsing/parser.cc
+@@ -1679,8 +1679,12 @@ Statement* Parser::RewriteSwitchStatement(Expression* tag,
+ }
+ 
+ void Parser::RewriteCatchPattern(CatchInfo* catch_info, bool* ok) {
++  // RIDI E Ink: ES2019 optional catch binding backport.  A bindless
++  // `catch { ... }` has neither a name nor a pattern; it reuses the hidden
++  // `.catch` variable and contributes no user-visible bound name.
++  const bool has_binding =
++      catch_info->name != nullptr || catch_info->pattern != nullptr;
+   if (catch_info->name == nullptr) {
+-    DCHECK_NOT_NULL(catch_info->pattern);
+     catch_info->name = ast_value_factory()->dot_catch_string();
+   }
+   catch_info->variable = catch_info->scope->DeclareLocal(catch_info->name, VAR);
+@@ -1704,7 +1708,7 @@ void Parser::RewriteCatchPattern(CatchInfo* catch_info, bool* ok) {
+     PatternRewriter::DeclareAndInitializeVariables(
+         this, catch_info->init_block, &descriptor, &decl,
+         &catch_info->bound_names, ok);
+-  } else {
++  } else if (has_binding) {
+     catch_info->bound_names.Add(catch_info->name, zone());
+   }
+ }

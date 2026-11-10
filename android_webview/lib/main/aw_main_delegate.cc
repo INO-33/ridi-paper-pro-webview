@@ -6,6 +6,7 @@
 
 #include <memory>
 #include <string.h>
+#include <string>
 #include <sys/system_properties.h>
 
 #include "android_webview/browser/aw_content_browser_client.h"
@@ -99,6 +100,19 @@ void ApplyCp2aSoftwarePolicy(base::CommandLine* command_line) {
     // This same mode marker is forwarded to the renderer so the Android
     // synchronous CPU sink is selected without a second public selector.
     command_line->AppendSwitch(switches::kEinkCp2aSoftwareFirst);
+
+    // RIDI E Ink: enable V8 5.8 HARMONY_STAGED syntax that modern sites ship
+    // untranspiled (object rest/spread, regexp lookbehind).  Single-process
+    // WebView: RenderProcessImpl reads --js-flags from this same process
+    // command line.  Any existing --js-flags value is preserved.
+    const char kRidiJsCompatFlags[] =
+        "--harmony-object-rest-spread --harmony-regexp-lookbehind";
+    std::string js_flags =
+        command_line->GetSwitchValueASCII(::switches::kJavaScriptFlags);
+    if (!js_flags.empty())
+      js_flags += " ";
+    js_flags += kRidiJsCompatFlags;
+    command_line->AppendSwitchASCII(::switches::kJavaScriptFlags, js_flags);
   }
 }
 }
